@@ -1,4 +1,4 @@
 #!/bin/sh
-
-nasm -f elf64 print.asm
-ld -o print print.o
+x=$(basename *.asm .asm)
+nasm -f elf64 $x.asm
+ld -o $x $x.o
