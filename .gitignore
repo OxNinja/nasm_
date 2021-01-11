@@ -1,0 +1,5 @@
+# Save only source and sh scripts
+*
+!*.*
+!/*
+*.o
