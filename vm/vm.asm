@@ -8,19 +8,29 @@ section .rodata
   goodbye_len: equ $-goodbye
 
 section .text
-
 _start:
   call _greet
 
-  ; real shit
-  call _clear
+  call get
 
-  ; custom instruction
-  mov rax, 0x1
-  mov rbx, 0x1
-  mov rcx, 0x1
-  mov rdx, 0x1
-  mov r8, 0x1
+  jmp _exec
+
+get:
+  push rbp
+  mov rbp, rsp
+
+  ; change here for custom instruction
+  mov rax, 0x0
+  mov rbx, 0x0
+  mov rcx, 0x0
+  mov rdx, 0x0
+  mov r8, 0x0
+
+  leave
+  ret
+
+_exec:
+  call _clear
 
   ; call custom instruction
   cmp rax, 0x1
@@ -28,8 +38,20 @@ _start:
 
   cmp rax, 0x2
   je push_a
-  ; end of real shit
 
+  cmp rax, 0x3
+  je add_a_b
+
+  cmp rax, 0x4
+  je sub_a_b
+
+  cmp rax, 0x5
+  je jump_a
+
+  ; invalid instruction
+  call _exit
+
+_start_end:
   call _exit
 
 _clear:
@@ -78,20 +100,26 @@ _exit:
   mov rdi, 0x0
   syscall
 
+; custom instructions set
 mov_a_b:
-  push rbp
-
-  call _greet
-
   mov rbx, rcx
 
-  ret
+  jmp _start_end
 
 push_a:
-  push rbp
-
-  call _goodbye
-
   push rbx
 
-  ret
+  jmp _start_end
+
+add_a_b:
+  add rax, rbx
+
+  jmp _start_end
+
+sub_a_b:
+  sub rax, rbx
+
+  jmp _start_end
+
+jump_a:
+  jmp rbx
