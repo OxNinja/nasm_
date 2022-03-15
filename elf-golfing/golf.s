@@ -3,7 +3,7 @@
 ; 32 bits
 bits 32
 ; vaddr mapping
-org 0x08000000
+org 0x80000
 
 _eident:
   ;; header hardcoding
@@ -12,8 +12,12 @@ _eident:
   db 0x01               ; eident_data (big/little endian)
   db 0x01               ; eident_version (:shrug: not used)
   db 0x00               ; eident_osabi (linux, netbsd, solaris...)
+
   db 0x00               ; eident_abiversion (:shrug: not used)
-  times 7 db 0x00       ; eident_pad (padding)
+  ;times 7 db 0x00       ; eident_pad (padding)
+  ;; declaring variables in the wild
+  str: db "Hello!", 0xa
+  strl: equ $-str
 
   dw 0x02               ; e_type
   dw 0x03               ; e_machine (x86, mips...)
@@ -25,18 +29,17 @@ _eident:
   dd 0x00               ; e_flags (:shrug: depends on arch)
   dw eident_s           ; e_ehsize (usually 52 or 64 bytes)
   dw pht_s              ; e_phentsize (size program header table entry)
-  dw 0x01               ; e_phnum (num of program header table entries)
-  dw 0x00               ; e_shentsize (size of section header table entry, :shrug: not used)
-  dw 0x00               ; e_shnum (num of section header table entries)
-  dw 0x00               ; e_shstrndx (index of section header table with section names)
+_pht:
+  ;; program header table overlapping ELF header
+  dw 0x01               ; e_phnum (num of program header table entries)                         p_type2
+  dw 0x00               ; e_shentsize (size of section header table entry, :shrug: not used)    P_type1
+  dw 0x00               ; e_shnum (num of section header table entries)                         p_offset2
+  dw 0x00               ; e_shstrndx (index of section header table with section names)         p_offset1
   ;; end header
 
 eident_s equ $-_eident
 
-_pht:
-  ;; program header table
-  dd 0x01               ; p_type (load, null...)
-  dd 0x00               ; p_offset
+  ;; continue pgrogram header table
   dd $$                 ; p_vaddr (addr of segment)
   dd $$                 ; p_paddr (physical addr of segment)
   
@@ -47,23 +50,17 @@ _pht:
   ;; end program header table
 pht_s equ $-_pht
 
-;; declaring variables in the wild
-str: db "Hello!", 0xa
-strl: equ $-str
-
 _start:
   ;; write Hello! to stdout
-  mov eax, 0x4
-  xor ebx, ebx
-  inc ebx
+  mov al, 0x04
+  mov bl, 0x01
   mov ecx, str
-  mov edx, strl
+  mov dl, strl
   int 0x80
 
   ;; exit 0
-  xor eax, eax
-  inc eax
-  xor ebx, ebx
+  mov al, 0x01
+  dec ebx ; ebx = 1
   int 0x80
   
 file_s equ $-$$
