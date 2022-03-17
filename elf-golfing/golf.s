@@ -9,17 +9,19 @@ _eident:
   ;; header hardcoding
   db 0x7f, "ELF"        ; magic number
   db 0x01               ; eident_class (32/64bits)
-  db 0x01               ; eident_data (big/little endian)
-  db 0x01               ; eident_version (:shrug: not used)
-  db 0x00               ; eident_osabi (linux, netbsd, solaris...)
   ;; declaring variables in the wild
   str: db "Hello!", 0xa
   strl: equ $-str
-  db 0x00               ; eident_pad (padding)
+gotoexit:
+  mov dl, strl
+  jmp short _exit
 
   dw 0x02               ; e_type
   dw 0x03               ; e_machine (x86, mips...)
-  dd 0x01               ; e_version (:shrug: not used)
+_start:
+  add al, 0x04
+  jmp short loadstr
+
   dd _start             ; e_entry
   dd _pht-$$            ; e_phoff (program header table)
   
@@ -57,13 +59,11 @@ eident_s equ $-_eident
 pht_s equ $-_pht
 
 
-_start:
+loadstr:
   ;; write Hello! to stdout
-  mov al, 0x04
   inc bl
   mov ecx, str
-  mov dl, strl
 
-  jmp short _exit
+  jmp short gotoexit
   
 file_s equ $-$$
